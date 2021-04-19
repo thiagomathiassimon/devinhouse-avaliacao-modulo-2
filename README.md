@@ -61,7 +61,7 @@ public class ProcessoMock implements Serializable {
 ### Modelo de classe
 
 
-![](./class.png)
+![](./diagramaclass.png)
 
  ### Instruções para a avaliação
 
