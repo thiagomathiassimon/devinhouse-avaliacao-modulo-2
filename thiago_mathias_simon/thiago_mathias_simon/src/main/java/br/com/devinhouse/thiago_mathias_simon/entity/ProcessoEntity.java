@@ -1,5 +1,7 @@
 package br.com.devinhouse.thiago_mathias_simon.entity;
 
+import org.springframework.context.annotation.Primary;
+
 import static javax.persistence.GenerationType.IDENTITY;
 
 import javax.persistence.Entity;

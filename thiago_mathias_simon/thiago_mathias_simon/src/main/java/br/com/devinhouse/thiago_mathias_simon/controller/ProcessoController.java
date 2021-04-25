@@ -43,7 +43,7 @@ public class ProcessoController {
 
 	@GetMapping(headers = HEADERS_VERSION_1, value = "/chave_processo" , produces = APPLICATION_JSON_VALUE)
 	@ResponseBody
-	public Iterable<ProcessoEntity> buscarProcessoPorChave(@RequestParam String valor) {
+	public ProcessoEntity buscarProcessoPorChave(@RequestParam String valor) {
 		return service.buscarProcessoPorChave(valor);
 	}
 

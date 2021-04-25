@@ -10,7 +10,6 @@ import br.com.devinhouse.thiago_mathias_simon.repository.ProcessoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,16 +27,17 @@ public class ProcessoService {
 
 		Iterable<ProcessoEntity> todosOsProcessos = recuperarProcessos();
 
-		long id = 1;
 		for (ProcessoEntity processo : todosOsProcessos) {
 			if (processo.getId() == novoProcesso.getId()) {
 				throw new ProcessAlreadyExistException("O ID que você informou já existe! Por favor, informe outro!");
+			} else if(processo.getNuProcesso().equals(novoProcesso.getNuProcesso())){
+				throw new ProcessAlreadyExistException("O número de processo informado já existe! Por favor infore outro!");
+			} else if(processo.getChaveProcesso().equals(novoProcesso.getChaveProcesso())){
+				throw new ProcessAlreadyExistException("A chave de processo informada já existe! Por favor informe outra!");
 			}
-			id++;
 		}
 
-		if ((novoProcesso.getNuProcesso() == null) || (novoProcesso.getChaveProcesso() == null)
-				|| (novoProcesso.getSgOrgaoProcesso() == null) || (novoProcesso.getNuAnoProcesso() == null)
+		if ((novoProcesso.getSgOrgaoProcesso() == null) || (novoProcesso.getNuAnoProcesso() == null)
 				|| (novoProcesso.getDescricao() == null) || (novoProcesso.getCdAssunto() == null)
 				|| (novoProcesso.getDescricaoAssunto() == null) || (novoProcesso.getCdInteressado() == null)
 				|| (novoProcesso.getNmInteressado() == null)) {
@@ -47,10 +47,28 @@ public class ProcessoService {
 
 		repository.save(novoProcesso);
 
+		List<ProcessoEntity> processos = (List<ProcessoEntity>) recuperarProcessos();
+
+		long id = 1;
+		for (ProcessoEntity processo: processos){
+			id = processo.getId();
+		}
+
+		Integer nuProcesso = Integer.parseInt(id + "");
+		novoProcesso.setNuProcesso(nuProcesso);
+		novoProcesso.setChaveProcesso(novoProcesso.getSgOrgaoProcesso() + " " + nuProcesso + "/" + novoProcesso.getNuAnoProcesso());
+
 		ProcessoCriadoDTO processoCriado = new ProcessoCriadoDTO();
 		processoCriado.setId(id);
 		processoCriado.setChaveProcesso(novoProcesso.getChaveProcesso());
 
+		for (ProcessoEntity processo: processos){
+			if (processo.getId() == id){
+				processo.setNuProcesso(novoProcesso.getNuProcesso());
+				processo.setChaveProcesso(novoProcesso.getChaveProcesso());
+				repository.save(processo);
+			}
+		}
 		return processoCriado;
 	}
 
@@ -61,81 +79,65 @@ public class ProcessoService {
 		return Optional.ofNullable(processo.orElseThrow());
 	}
 
-	public Iterable<ProcessoEntity> buscarProcessoPorChave(String chaveProcesso) {
+	public ProcessoEntity buscarProcessoPorChave(String chaveProcesso) {
 
 		Iterable<ProcessoEntity> todosOsProcessos = recuperarProcessos();
-		List<ProcessoEntity> processoFiltrados = new ArrayList<>();
-		boolean encontrouOProcesso = false;
 		for (ProcessoEntity processo : todosOsProcessos) {
 			if (processo.getChaveProcesso().equals(chaveProcesso)) {
-				processoFiltrados.add(processo);
-				encontrouOProcesso = true;
+				return processo;
 			}
-		}
-		if (encontrouOProcesso){
-			return processoFiltrados;
 		}
 		throw new ProcessNotFoundException("O processo pelo qual buscavas não foi encontrado!");
 	}
 
 	public ProcessoEntity atualizarProcessso(long id, ProcessoEntity processoAtualizado) {
 
-		Iterable<ProcessoEntity> todosOsProcessos = repository.findAll();
+		Iterable<ProcessoEntity> todosOsProcessos = recuperarProcessos();
 
-		for (ProcessoEntity process : todosOsProcessos) {
+		for (ProcessoEntity processo : todosOsProcessos) {
+			if (processo.getId() == id) {
 
-			if (process.getId() == id) {
-
-				Integer nuProcesso = (processoAtualizado.getNuProcesso() != null) ? processoAtualizado.getNuProcesso()
-						: process.getNuProcesso();
-				String chaveProcesso = (processoAtualizado.getChaveProcesso() != null)
-						? processoAtualizado.getChaveProcesso()
-						: process.getChaveProcesso();
 				String sgOrgaoProcesso = (processoAtualizado.getSgOrgaoProcesso() != null)
 						? processoAtualizado.getSgOrgaoProcesso()
-						: process.getSgOrgaoProcesso();
+						: processo.getSgOrgaoProcesso();
 				String nuAnoProcesso = (processoAtualizado.getNuAnoProcesso() != null)
 						? processoAtualizado.getNuAnoProcesso()
-						: process.getNuAnoProcesso();
+						: processo.getNuAnoProcesso();
 				String descricao = (processoAtualizado.getDescricao() != null) ? processoAtualizado.getDescricao()
-						: process.getDescricao();
+						: processo.getDescricao();
 				Integer cdAssunto = (processoAtualizado.getCdAssunto() != null) ? processoAtualizado.getCdAssunto()
-						: process.getCdAssunto();
+						: processo.getCdAssunto();
 				String descricaoAssunto = (processoAtualizado.getDescricaoAssunto() != null)
 						? processoAtualizado.getDescricaoAssunto()
-						: process.getDescricaoAssunto();
+						: processo.getDescricaoAssunto();
 				Integer cdInteressado = (processoAtualizado.getCdInteressado() != null)
 						? processoAtualizado.getCdInteressado()
-						: process.getCdInteressado();
+						: processo.getCdInteressado();
 				String nmInteressado = (processoAtualizado.getNmInteressado() != null)
 						? processoAtualizado.getNmInteressado()
-						: process.getNmInteressado();
+						: processo.getNmInteressado();
 
-				process.setNuProcesso(nuProcesso);
-				process.setChaveProcesso(chaveProcesso);
-				process.setSgOrgaoProcesso(sgOrgaoProcesso);
-				process.setNuAnoProcesso(nuAnoProcesso);
-				process.setDescricao(descricao);
-				process.setCdAssunto(cdAssunto);
-				process.setDescricaoAssunto(descricaoAssunto);
-				process.setCdInteressado(cdInteressado);
-				process.setNmInteressado(nmInteressado);
+				processo.setSgOrgaoProcesso(sgOrgaoProcesso);
+				processo.setNuAnoProcesso(nuAnoProcesso);
+				processo.setDescricao(descricao);
+				processo.setCdAssunto(cdAssunto);
+				processo.setDescricaoAssunto(descricaoAssunto);
+				processo.setCdInteressado(cdInteressado);
+				processo.setNmInteressado(nmInteressado);
 
-				repository.save(process);
-				return process;
+				repository.save(processo);
+				return processo;
 			}
 		}
 		throw new ProcessNotFoundException("O processo que buscavas atualizar não foi encontrado!");
 	}
 
 	public ProcessoRemovidoDTO deletarProcesso(long id) {
-		Iterable<ProcessoEntity> todosOsProcessos = repository.findAll();
+		Iterable<ProcessoEntity> todosOsProcessos = recuperarProcessos();
 
-		for (ProcessoEntity process : todosOsProcessos) {
-
-			if (process.getId() == id) {
-
-				repository.deleteById(id);
+		for (ProcessoEntity processo: todosOsProcessos) {
+			if (processo.getId() == id) {
+				repository.delete(processo);
 
 				ProcessoRemovidoDTO processoRemovido = new ProcessoRemovidoDTO();
 				processoRemovido.setId(id);
